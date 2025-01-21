@@ -9,9 +9,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private String name;
     private String email;
     private String password;
+
+    @Column(length = 32)
+    private String salt; // Add salt field
 
     // Getters and setters
     public Long getId() {
@@ -45,5 +49,12 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-}
 
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
+    }
+}
