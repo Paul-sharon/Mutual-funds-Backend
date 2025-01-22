@@ -4,12 +4,14 @@ import com.gtl.Mutualfunds.dto.LoginDto;
 import com.gtl.Mutualfunds.dto.UserRegistrationDto;
 import com.gtl.Mutualfunds.model.User;
 import com.gtl.Mutualfunds.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api")
@@ -61,10 +63,14 @@ public class UserController {
         }
     }
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDto loginDto) {
+    public ResponseEntity<String> login(@RequestBody LoginDto loginDto, HttpSession session) {
         try {
             boolean isAuthenticated = userService.authenticateUser(loginDto);
             if (isAuthenticated) {
+                // Store user information in the session
+                Optional<User> user = userService.getUserByEmail(loginDto.getEmail());
+                session.setAttribute("user", user.get()); // Save the user object in session
+
                 return new ResponseEntity<>("Login successful!", HttpStatus.OK);
             } else {
                 return new ResponseEntity<>("Invalid email or password", HttpStatus.UNAUTHORIZED);
@@ -73,4 +79,24 @@ public class UserController {
             return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    @GetMapping("/currentUser")
+    public ResponseEntity<User> getCurrentUser(HttpSession session) {
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            return ResponseEntity.ok(user);
+        } else {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(HttpSession session) {
+        try {
+            session.invalidate(); // Invalidate the session
+            return new ResponseEntity<>("Logout successful!", HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 }
