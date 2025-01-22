@@ -60,13 +60,5 @@ public class UserService {
         }
         return false;
     }
-    public boolean deleteUser(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            userRepository.delete(user.get()); // Delete the user
-            return true;
-        }
-        return false;
-    }
 
 }
