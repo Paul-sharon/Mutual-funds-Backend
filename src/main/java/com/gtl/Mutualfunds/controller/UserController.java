@@ -98,5 +98,18 @@ public class UserController {
             return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        System.out.println("Received DELETE request for user id: " + id); // Log for debugging
+        try {
+            boolean isDeleted = userService.deleteUser(id);
+            if (isDeleted) {
+                return new ResponseEntity<>("User deleted successfully!", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }
