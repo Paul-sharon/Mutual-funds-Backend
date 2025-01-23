@@ -23,7 +23,7 @@ public class UserService {
             throw new IllegalArgumentException("Email is already registered");
         }
 
-        String salt = PasswordUtil.generateSalt(); // Generate a salt
+        String salt = PasswordUtil.generateSalt(); // Generate salt
         String hashedPassword = PasswordUtil.hashPassword(userDto.getPassword(), salt); // Hash the password with salt
 
         User user = new User();
@@ -40,6 +40,8 @@ public class UserService {
     public User getUserById(Long id) {
         return userRepository.findById(id).orElse(null);
     }
+
+    // Get user by Email
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
@@ -48,10 +50,14 @@ public class UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    // Verify password
     public boolean verifyPassword(String enteredPassword, User user) {
         String hashedEnteredPassword = PasswordUtil.hashPassword(enteredPassword, user.getSalt());
         return hashedEnteredPassword.equals(user.getPassword());
     }
+
+    // Authenticate user
     public boolean authenticateUser(LoginDto loginDto) {
         Optional<User> optionalUser = userRepository.findByEmail(loginDto.getEmail());
         if (optionalUser.isPresent()) {
@@ -60,6 +66,8 @@ public class UserService {
         }
         return false;
     }
+
+    // Delete user
     public boolean deleteUser(Long id) {
         Optional<User> user = userRepository.findById(id);
         if (user.isPresent()) {
@@ -68,5 +76,4 @@ public class UserService {
         }
         return false;
     }
-
 }

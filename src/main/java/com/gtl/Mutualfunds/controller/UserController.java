@@ -10,7 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -22,94 +24,124 @@ public class UserController {
 
     // Register a new user
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserRegistrationDto userDto) {
+    public ResponseEntity<Map<String, String>> register(@RequestBody UserRegistrationDto userDto) {
+        Map<String, String> response = new HashMap<>();
         try {
             String result = userService.registerUser(userDto);  // Password hashing happens here in the service
-            return new ResponseEntity<>(result, HttpStatus.CREATED);
+            response.put("message", result);
+            return new ResponseEntity<>(response, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("Validation Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            response.put("error", "Validation Error: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // Get user details by ID
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {
+        Map<String, Object> response = new HashMap<>();
         try {
             User user = userService.getUserById(id);
             if (user != null) {
-                return ResponseEntity.ok(user);
+                response.put("user", user);
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+                response.put("error", "User not found");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // Get all users
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<Map<String, Object>> getAllUsers() {
+        Map<String, Object> response = new HashMap<>();
         try {
             List<User> users = userService.getAllUsers();
             if (!users.isEmpty()) {
-                return ResponseEntity.ok(users);
+                response.put("users", users);
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+                response.put("message", "No users found");
+                return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // Login user
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDto loginDto, HttpSession session) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginDto loginDto, HttpSession session) {
+        Map<String, String> response = new HashMap<>();
         try {
             boolean isAuthenticated = userService.authenticateUser(loginDto);
             if (isAuthenticated) {
-                // Store user information in the session
                 Optional<User> user = userService.getUserByEmail(loginDto.getEmail());
-                session.setAttribute("user", user.get()); // Save the user object in session
-
-                return new ResponseEntity<>("Login successful!", HttpStatus.OK);
+                user.ifPresent(u -> session.setAttribute("user", u)); // Store user object in session
+                response.put("message", "Login successful!");
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>("Invalid email or password", HttpStatus.UNAUTHORIZED);
+                response.put("error", "Invalid email or password");
+                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    @GetMapping("/currentUser")
-    public ResponseEntity<User> getCurrentUser(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        } else {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+            response.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpSession session) {
-        try {
-            session.invalidate(); // Invalidate the session
-            return new ResponseEntity<>("Logout successful!", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    // Get current logged-in user
+    @GetMapping("/currentUser")
+    public ResponseEntity<Map<String, Object>> getCurrentUser(HttpSession session) {
+        Map<String, Object> response = new HashMap<>();
+        User user = (User) session.getAttribute("user");
+        if (user != null) {
+            response.put("user", user);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.put("error", "Unauthorized");
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
         }
     }
+
+    // Logout user
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(HttpSession session) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            session.invalidate(); // Invalidate the session
+            response.put("message", "Logout successful!");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } catch (Exception e) {
+            response.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // Delete user
     @DeleteMapping("/delete/{id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
-        System.out.println("Received DELETE request for user id: " + id); // Log for debugging
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
         try {
             boolean isDeleted = userService.deleteUser(id);
             if (isDeleted) {
-                return new ResponseEntity<>("User deleted successfully!", HttpStatus.OK);
+                response.put("message", "User deleted successfully!");
+                return new ResponseEntity<>(response, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
+                response.put("error", "User not found");
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }
