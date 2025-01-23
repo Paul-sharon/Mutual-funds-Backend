@@ -4,7 +4,9 @@ import com.gtl.Mutualfunds.dto.LoginDto;
 import com.gtl.Mutualfunds.dto.UserRegistrationDto;
 import com.gtl.Mutualfunds.model.User;
 import com.gtl.Mutualfunds.service.UserService;
-import jakarta.servlet.http.HttpSession;
+import com.gtl.Mutualfunds.util.JwtUtil; // Import your JWT utility class
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtUtil jwtUtil; // Inject the JWT utility class
 
     // Register a new user
     @PostMapping("/register")
@@ -79,50 +84,69 @@ public class UserController {
 
     // Login user
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginDto loginDto, HttpSession session) {
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
+        Map<String, String> res = new HashMap<>();
         try {
-            boolean isAuthenticated = userService.authenticateUser(loginDto);
-            if (isAuthenticated) {
-                Optional<User> user = userService.getUserByEmail(loginDto.getEmail());
-                user.ifPresent(u -> session.setAttribute("user", u)); // Store user object in session
-                response.put("message", "Login successful!");
-                return new ResponseEntity<>(response, HttpStatus.OK);
+            Optional<User> user = userService.authenticateUser(loginDto);
+            if (user.isPresent()) {
+                String token = jwtUtil.generateToken(user.get().getEmail());
+
+                // Set the JWT token as an HTTP-only cookie
+                Cookie cookie = new Cookie("jwt_token", token);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                cookie.setMaxAge(24 * 60 * 60); // 1 day
+                response.addCookie(cookie);
+
+                res.put("message", "Login successful!");
+                return new ResponseEntity<>(res, HttpStatus.OK);
             } else {
-                response.put("error", "Invalid email or password");
-                return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+                res.put("error", "Invalid email or password");
+                return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
             }
         } catch (Exception e) {
-            response.put("error", "An error occurred: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            res.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     // Get current logged-in user
     @GetMapping("/currentUser")
-    public ResponseEntity<Map<String, Object>> getCurrentUser(HttpSession session) {
+    public ResponseEntity<Map<String, Object>> getCurrentUser(@CookieValue(value = "jwt_token", defaultValue = "") String token) {
         Map<String, Object> response = new HashMap<>();
-        User user = (User) session.getAttribute("user");
-        if (user != null) {
-            response.put("user", user);
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        } else {
+        if (token.isEmpty() || jwtUtil.isTokenExpired(token)) {
             response.put("error", "Unauthorized");
             return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        }
+
+        String username = jwtUtil.extractUsername(token);
+        Optional<User> user = userService.getUserByEmail(username);
+        if (user.isPresent()) {
+            response.put("user", user.get());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else {
+            response.put("error", "User not found");
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
         }
     }
 
     // Logout user
     @PostMapping("/logout")
-    public ResponseEntity<Map<String, String>> logout(HttpSession session) {
-        Map<String, String> response = new HashMap<>();
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        Map<String, String> res = new HashMap<>();
         try {
-            session.invalidate(); // Invalidate the session
-            response.put("message", "Logout successful!");
-            return new ResponseEntity<>(response, HttpStatus.OK);
+            // Clear the JWT cookie
+            Cookie cookie = new Cookie("jwt_token", null);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(0); // Delete the cookie
+            response.addCookie(cookie);
+
+            res.put("message", "Logout successful!");
+            return new ResponseEntity<>(res, HttpStatus.OK);
         } catch (Exception e) {
-            response.put("error", "An error occurred: " + e.getMessage());
-            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+            res.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
