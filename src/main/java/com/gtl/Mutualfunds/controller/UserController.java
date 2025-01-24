@@ -98,7 +98,9 @@ public class UserController {
                 cookie.setMaxAge(24 * 60 * 60); // 1 day
                 response.addCookie(cookie);
 
+                // Include the token in the response body
                 res.put("message", "Login successful!");
+                res.put("token", token); // Add this line
                 return new ResponseEntity<>(res, HttpStatus.OK);
             } else {
                 res.put("error", "Invalid email or password");
