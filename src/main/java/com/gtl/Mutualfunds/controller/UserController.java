@@ -1,102 +1,173 @@
-package com.gtl.Mutualfunds.controller;
+package com.gtl.Mutualfunds.controller;  
 
-import com.gtl.Mutualfunds.dto.LoginDto;
-import com.gtl.Mutualfunds.dto.UserRegistrationDto;
-import com.gtl.Mutualfunds.model.User;
-import com.gtl.Mutualfunds.service.UserService;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.gtl.Mutualfunds.dto.LoginDto;  
+import com.gtl.Mutualfunds.dto.UserRegistrationDto;  
+import com.gtl.Mutualfunds.model.User;  
+import com.gtl.Mutualfunds.service.UserService;  
+import com.gtl.Mutualfunds.util.JwtUtil; // Import your JWT utility class  
+import jakarta.servlet.http.Cookie;  
+import jakarta.servlet.http.HttpServletResponse;  
+import org.springframework.beans.factory.annotation.Autowired;  
+import org.springframework.http.HttpStatus;  
+import org.springframework.http.ResponseEntity;  
+import org.springframework.web.bind.annotation.*;  
 
-import java.util.List;
-import java.util.Optional;
+import java.util.HashMap;  
+import java.util.List;  
+import java.util.Map;  
+import java.util.Optional;  
 
-@RestController
-@RequestMapping("/api")
-public class UserController {
+@RestController  
+@RequestMapping("/api")  
+public class UserController {  
 
-    @Autowired
-    private UserService userService;
+    @Autowired  
+    private UserService userService;  
 
-    // Register a new user
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody UserRegistrationDto userDto) {
-        try {
-            String result = userService.registerUser(userDto);  // Password hashing happens here in the service
-            return new ResponseEntity<>(result, HttpStatus.CREATED);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>("Validation Error: " + e.getMessage(), HttpStatus.BAD_REQUEST);
-        } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    @Autowired  
+    private JwtUtil jwtUtil; // Inject the JWT utility class  
 
-    // Get user details by ID
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        try {
-            User user = userService.getUserById(id);
-            if (user != null) {
-                return ResponseEntity.ok(user);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    // Register a new user  
+    @PostMapping("/register")  
+    public ResponseEntity<Map<String, String>> register(@RequestBody UserRegistrationDto userDto) {  
+        Map<String, String> response = new HashMap<>();  
+        try {  
+            String result = userService.registerUser(userDto);  // Password hashing happens here in the service  
+            response.put("message", result);  
+            return new ResponseEntity<>(response, HttpStatus.CREATED);  
+        } catch (IllegalArgumentException e) {  
+            response.put("error", "Validation Error: " + e.getMessage());  
+            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);  
+        } catch (Exception e) {  
+            response.put("error", "An error occurred: " + e.getMessage());  
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);  
+        }  
+    }  
 
-    // Get all users
-    @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers() {
-        try {
-            List<User> users = userService.getAllUsers();
-            if (!users.isEmpty()) {
-                return ResponseEntity.ok(users);
-            } else {
-                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginDto loginDto, HttpSession session) {
-        try {
-            boolean isAuthenticated = userService.authenticateUser(loginDto);
-            if (isAuthenticated) {
-                // Store user information in the session
-                Optional<User> user = userService.getUserByEmail(loginDto.getEmail());
-                session.setAttribute("user", user.get()); // Save the user object in session
+    // Get user details by ID  
+    @GetMapping("/{id}")  
+    public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {  
+        Map<String, Object> response = new HashMap<>();  
+        try {  
+            User user = userService.getUserById(id);  
+            if (user != null) {  
+                response.put("user", user);  
+                return new ResponseEntity<>(response, HttpStatus.OK);  
+            } else {  
+                response.put("error", "User not found");  
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);  
+            }  
+        } catch (Exception e) {  
+            response.put("error", "An error occurred: " + e.getMessage());  
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);  
+        }  
+    }  
 
-                return new ResponseEntity<>("Login successful!", HttpStatus.OK);
-            } else {
-                return new ResponseEntity<>("Invalid email or password", HttpStatus.UNAUTHORIZED);
-            }
-        } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    @GetMapping("/currentUser")
-    public ResponseEntity<User> getCurrentUser(HttpSession session) {
-        User user = (User) session.getAttribute("user");
-        if (user != null) {
-            return ResponseEntity.ok(user);
-        } else {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
-    }
+    // Get all users  
+    @GetMapping("/users")  
+    public ResponseEntity<Map<String, Object>> getAllUsers() {  
+        Map<String, Object> response = new HashMap<>();  
+        try {  
+            List<User> users = userService.getAllUsers();  
+            if (!users.isEmpty()) {  
+                response.put("users", users);  
+                return new ResponseEntity<>(response, HttpStatus.OK);  
+            } else {  
+                response.put("message", "No users found");  
+                return new ResponseEntity<>(response, HttpStatus.NO_CONTENT);  
+            }  
+        } catch (Exception e) {  
+            response.put("error", "An error occurred: " + e.getMessage());  
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);  
+        }  
+    }  
 
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpSession session) {
-        try {
-            session.invalidate(); // Invalidate the session
-            return new ResponseEntity<>("Logout successful!", HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>("An error occurred: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+    // Login user  
+    @PostMapping("/login")  
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {  
+        Map<String, String> res = new HashMap<>();  
+        try {  
+            Optional<User> user = userService.authenticateUser(loginDto);  
+            if (user.isPresent()) {  
+                String token = jwtUtil.generateToken(user.get().getEmail());  
 
+                // Set the JWT token as an HTTP-only cookie  
+                Cookie cookie = new Cookie("jwt_token", token);  
+                cookie.setHttpOnly(true);  
+                cookie.setPath("/");  
+                cookie.setMaxAge(24 * 60 * 60); // 1 day  
+                response.addCookie(cookie);  
+
+                // Include the token in the response body  
+                res.put("message", "Login successful!");  
+                res.put("token", token); // Add this line  
+                return new ResponseEntity<>(res, HttpStatus.OK);  
+            } else {  
+                res.put("error", "Invalid email or password");  
+                return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);  
+            }  
+        } catch (Exception e) {  
+            res.put("error", "An error occurred: " + e.getMessage());  
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);  
+        }  
+    }  
+
+    // Get current logged-in user  
+    @GetMapping("/currentUser")  
+    public ResponseEntity<Map<String, Object>> getCurrentUser(@CookieValue(value = "jwt_token", defaultValue = "") String token) {  
+        Map<String, Object> response = new HashMap<>();  
+        if (token.isEmpty() || jwtUtil.isTokenExpired(token)) {  
+            response.put("error", "Unauthorized");  
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);  
+        }  
+
+        String username = jwtUtil.extractUsername(token);  
+        Optional<User> user = userService.getUserByEmail(username);  
+        if (user.isPresent()) {  
+            response.put("user", user.get());  
+            return new ResponseEntity<>(response, HttpStatus.OK);  
+        } else {  
+            response.put("error", "User not found");  
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);  
+        }  
+    }  
+
+    // Logout user  
+    @PostMapping("/logout")  
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {  
+        Map<String, String> res = new HashMap<>();  
+        try {  
+            // Clear the JWT cookie  
+            Cookie cookie = new Cookie("jwt_token", null);  
+            cookie.setHttpOnly(true);  
+            cookie.setPath("/");  
+            cookie.setMaxAge(0); // Delete the cookie  
+            response.addCookie(cookie);  
+
+            res.put("message", "Logout successful!");  
+            return new ResponseEntity<>(res, HttpStatus.OK);  
+        } catch (Exception e) {  
+            res.put("error", "An error occurred: " + e.getMessage());  
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);  
+        }  
+    }  
+
+    // Delete user  
+    @DeleteMapping("/delete/{id}")  
+    public ResponseEntity<Map<String, String>> deleteUser(@PathVariable Long id) {  
+        Map<String, String> response = new HashMap<>();  
+        try {  
+            boolean isDeleted = userService.deleteUser(id);  
+            if (isDeleted) {  
+                response.put("message", "User deleted successfully!");  
+                return new ResponseEntity<>(response, HttpStatus.OK);  
+            } else {  
+                response.put("error", "User not found");  
+                return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);  
+            }  
+        } catch (Exception e) {  
+            response.put("error", "An error occurred: " + e.getMessage());  
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);  
+        }  
+    }  
 }
