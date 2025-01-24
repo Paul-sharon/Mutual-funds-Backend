@@ -103,7 +103,7 @@ public class UserController {
                 res.put("token", token); // Add this line  
                 return new ResponseEntity<>(res, HttpStatus.OK);  
             } else {  
-                res.put("error", "Invalid email or password");  
+                res.put("error", " Invalid email or password");
                 return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);  
             }  
         } catch (Exception e) {  
