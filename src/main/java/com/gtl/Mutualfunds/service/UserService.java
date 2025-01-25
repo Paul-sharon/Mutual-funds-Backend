@@ -72,27 +72,27 @@ public class UserService {
     }  
 
     // Authenticate user and return User object if successful  
-    public Optional<User> authenticateUser(LoginDto loginDto) {  
-        // Validate input  
-        if (loginDto.getEmail() == null || loginDto.getEmail().isEmpty() ||  
-                loginDto.getPassword() == null || loginDto.getPassword().isEmpty()) {  
-            throw new IllegalArgumentException("Email and password must not be null or empty.");  
-        }  
+    public Optional<User> authenticateUser(LoginDto loginDto) {
+        // Validate input
+        if (loginDto.getEmail() == null || loginDto.getEmail().isEmpty() ||
+                loginDto.getPassword() == null || loginDto.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Email and password must not be null or empty.");
+        }
 
-        // Retrieve user by email  
-        Optional<User> optionalUser = userRepository.findByEmail(loginDto.getEmail());  
-        if (optionalUser.isPresent()) {  
-            User user = optionalUser.get();  
-            // Verify the password  
-            if (verifyPassword(loginDto.getPassword(), user)) {  
-                return Optional.of(user); // Return the user if authentication is successful  
-            } else {  
-                throw new IllegalArgumentException("Invalid password.");  
-            }  
-        } else {  
-            throw new IllegalArgumentException("No user found with the provided email.");  
-        }  
-    }  
+        // Retrieve user by email
+        Optional<User> optionalUser = userRepository.findByEmail(loginDto.getEmail());
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            // Verify the password
+            if (verifyPassword(loginDto.getPassword(), user)) {
+                return Optional.of(user); // Return the user if authentication is successful
+            } else {
+                return Optional.empty(); // Return empty if password verification fails
+            }
+        }
+        // No user found; return empty
+        return Optional.empty();
+    }
 
     // Delete user  
     public boolean deleteUser(Long id) {  

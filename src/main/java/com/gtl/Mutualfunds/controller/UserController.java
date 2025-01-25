@@ -42,8 +42,7 @@ public class UserController {
             response.put("error", "An error occurred: " + e.getMessage());  
             return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);  
         }  
-    }  
-
+    }
     // Get user details by ID  
     @GetMapping("/{id}")  
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {  
@@ -83,35 +82,38 @@ public class UserController {
     }  
 
     // Login user  
-    @PostMapping("/login")  
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {  
-        Map<String, String> res = new HashMap<>();  
-        try {  
-            Optional<User> user = userService.authenticateUser(loginDto);  
-            if (user.isPresent()) {  
-                String token = jwtUtil.generateToken(user.get().getEmail());  
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
+        Map<String, String> res = new HashMap<>();
+        System.out.println("Login attempt for email: " + loginDto.getEmail());
 
-                // Set the JWT token as an HTTP-only cookie  
-                Cookie cookie = new Cookie("jwt_token", token);  
-                cookie.setHttpOnly(true);  
-                cookie.setPath("/");  
-                cookie.setMaxAge(24 * 60 * 60); // 1 day  
-                response.addCookie(cookie);  
+        try {
+            Optional<User> user = userService.authenticateUser(loginDto);
 
-                // Include the token in the response body  
-                res.put("message", "Login successful!");  
-                res.put("token", token); // Add this line  
-                return new ResponseEntity<>(res, HttpStatus.OK);  
-            } else {  
-                res.put("error", " Invalid email or password");
-                return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);  
-            }  
-        } catch (Exception e) {  
-            res.put("error", "An error occurred: " + e.getMessage());  
-            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);  
-        }  
-    }  
+            if (user.isPresent()) {
+                String token = jwtUtil.generateToken(user.get().getEmail());
+                Cookie cookie = new Cookie("jwt_token", token);
+                cookie.setHttpOnly(true);
+                cookie.setPath("/");
+                cookie.setMaxAge(24 * 60 * 60); // 1 day
+                response.addCookie(cookie);
 
+                res.put("message", "Login successful!");
+                res.put("token", token);
+                System.out.println("Login successful for: " + loginDto.getEmail());
+                return new ResponseEntity<>(res, HttpStatus.OK);
+            } else {
+                System.out.println("Invalid login attempt for email: " + loginDto.getEmail());
+                res.put("error", "Invalid email or password");
+                return new ResponseEntity<>(res, HttpStatus.UNAUTHORIZED);
+            }
+        } catch (Exception e) {
+            System.out.println("Error during login for email: " + loginDto.getEmail() + " - Exception: " + e.getMessage());
+            e.printStackTrace();
+            res.put("error", "An internal error occurred. Please try again later.");
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     // Get current logged-in user  
     @GetMapping("/currentUser")  
     public ResponseEntity<Map<String, Object>> getCurrentUser(@CookieValue(value = "jwt_token", defaultValue = "") String token) {  
@@ -133,24 +135,25 @@ public class UserController {
     }  
 
     // Logout user  
-    @PostMapping("/logout")  
-    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {  
-        Map<String, String> res = new HashMap<>();  
-        try {  
-            // Clear the JWT cookie  
-            Cookie cookie = new Cookie("jwt_token", null);  
-            cookie.setHttpOnly(true);  
-            cookie.setPath("/");  
-            cookie.setMaxAge(0); // Delete the cookie  
-            response.addCookie(cookie);  
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(HttpServletResponse response) {
+        Map<String, String> res = new HashMap<>();
+        try {
+            // Clear the JWT cookie
+            Cookie cookie = new Cookie("jwt_token", null);
+            cookie.setHttpOnly(true);
+            cookie.setPath("/");
+            cookie.setMaxAge(0); // Delete the cookie
+            response.addCookie(cookie);
 
-            res.put("message", "Logout successful!");  
-            return new ResponseEntity<>(res, HttpStatus.OK);  
-        } catch (Exception e) {  
-            res.put("error", "An error occurred: " + e.getMessage());  
-            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);  
-        }  
-    }  
+            res.put("message", "Logout successful!");
+            return new ResponseEntity<>(res, HttpStatus.OK);
+        } catch (Exception e) {
+            res.put("error", "An error occurred: " + e.getMessage());
+            return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
 
     // Delete user  
     @DeleteMapping("/delete/{id}")  
