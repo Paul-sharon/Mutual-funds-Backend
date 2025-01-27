@@ -80,7 +80,7 @@ public class UserService {
         }
 
         // Retrieve user by email
-        Optional<User> optionalUser = userRepository.findByEmail(loginDto.getEmail());
+        Optional<User> optionalUser = userRepository.findByEmail(loginDto.getEmail()); //Using Optional avoids returning null directly, preventing NullPointerException
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             // Verify the password
