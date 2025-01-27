@@ -76,7 +76,6 @@ public class UserController {
             return new ResponseEntity<>(res, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
     // Get user details by ID  
     @GetMapping("/{id}")  
     public ResponseEntity<Map<String, Object>> getUserById(@PathVariable Long id) {  
