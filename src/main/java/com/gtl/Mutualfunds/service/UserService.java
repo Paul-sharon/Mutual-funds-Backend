@@ -18,37 +18,42 @@ public class UserService {
     private UserRepository userRepository;  
 
     // Register a user  
-    public String registerUser(UserRegistrationDto userDto) {  
-        // Check for null fields  
-        if (userDto.getEmail() == null || userDto.getEmail().isEmpty()) {  
-            throw new IllegalArgumentException("Email must not be null or empty.");  
-        }  
-        if (userDto.getName() == null || userDto.getName().isEmpty()) {  
-            throw new IllegalArgumentException("Name must not be null or empty.");  
-        }  
-        if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {  
-            throw new IllegalArgumentException("Password must not be null or empty.");  
-        }  
+    public String registerUser(UserRegistrationDto userDto) {
+        // Check for null fields
+        if (userDto.getEmail() == null || userDto.getEmail().isEmpty()) {
+            throw new IllegalArgumentException("Email must not be null or empty.");
+        }
+        if (userDto.getName() == null || userDto.getName().isEmpty()) {
+            throw new IllegalArgumentException("Name must not be null or empty.");
+        }
+        if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password must not be null or empty.");
+        }
+        // Check for phone number
+        if (userDto.getPhoneNumber() == null || userDto.getPhoneNumber().isEmpty()) {
+            throw new IllegalArgumentException("Phone number must not be null or empty.");
+        }
 
-        // Check if email is already registered  
-        if (userRepository.existsByEmail(userDto.getEmail())) {  
-            throw new IllegalArgumentException("Email is already registered.");  
-        }  
+        // Check if email is already registered
+        if (userRepository.existsByEmail(userDto.getEmail())) {
+            throw new IllegalArgumentException("Email is already registered.");
+        }
 
-        // Generate salt and hash the password  
-        String salt = PasswordUtil.generateSalt();  
-        String hashedPassword = PasswordUtil.hashPassword(userDto.getPassword(), salt);  
+        // Generate salt and hash the password
+        String salt = PasswordUtil.generateSalt();
+        String hashedPassword = PasswordUtil.hashPassword(userDto.getPassword(), salt);
 
-        // Create and save the user  
-        User user = new User();  
-        user.setName(userDto.getName());  
-        user.setEmail(userDto.getEmail());  
-        user.setPassword(hashedPassword);  
-        user.setSalt(salt);  
+        // Create and save the user
+        User user = new User();
+        user.setName(userDto.getName());
+        user.setEmail(userDto.getEmail());
+        user.setPassword(hashedPassword);
+        user.setSalt(salt);
+        user.setPhoneNumber(userDto.getPhoneNumber()); // Set phone number
 
-        userRepository.save(user);  
-        return "User registered successfully!";  
-    }  
+        userRepository.save(user);
+        return "User registered successfully!";
+    }
 
     // Get user by ID  
     public User getUserById(Long id) {  

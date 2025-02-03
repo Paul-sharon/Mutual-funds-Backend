@@ -4,6 +4,7 @@ public class UserRegistrationDto {
     private String name;
     private String email;
     private String password;
+    private String phoneNumber; // Add phone number
 
     // Getters and setters
     public String getName() {
@@ -29,5 +30,12 @@ public class UserRegistrationDto {
     public void setPassword(String password) {
         this.password = password;
     }
-}
 
+    public String getPhoneNumber() {
+        return phoneNumber; // Getter for phone number
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber; // Setter for phone number
+    }
+}

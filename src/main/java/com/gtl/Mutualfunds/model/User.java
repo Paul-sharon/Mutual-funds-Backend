@@ -15,7 +15,9 @@ public class User {
     private String password;
 
     @Column(length = 32)
-    private String salt; // Add salt field
+    private String salt; // Salt field
+
+    private String phoneNumber; // Add phone number field
 
     // Getters and setters
     public Long getId() {
@@ -56,5 +58,13 @@ public class User {
 
     public void setSalt(String salt) {
         this.salt = salt;
+    }
+
+    public String getPhoneNumber() { // Getter for phone number
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) { // Setter for phone number
+        this.phoneNumber = phoneNumber;
     }
 }
