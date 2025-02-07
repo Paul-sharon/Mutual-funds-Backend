@@ -1,5 +1,4 @@
-package com.gtl.Mutualfunds.controller;  
-
+package com.gtl.Mutualfunds.controller;
 import com.gtl.Mutualfunds.dto.LoginDto;  
 import com.gtl.Mutualfunds.dto.UserRegistrationDto;  
 import com.gtl.Mutualfunds.model.User;  
