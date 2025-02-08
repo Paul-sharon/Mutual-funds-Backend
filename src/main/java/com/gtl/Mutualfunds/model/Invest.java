@@ -22,6 +22,9 @@ public class Invest {
     private double navPercentage;
 
     @Column(nullable = false)
+    private double navRate; // New field for NAV rate
+
+    @Column(nullable = false)
     private LocalDate date;
 
     @Column(nullable = false)
@@ -31,6 +34,12 @@ public class Invest {
     private String returnsIn;
 
     private String investType;
+
+    @Column(nullable = false)
+    private String riskType; // New field for risk level (e.g., Low, Medium, High)
+
+    @Column(nullable = false)
+    private String recommendationType; // New field for recommendation (e.g., Buy, Hold, Sell)
 
     @PrePersist
     public void setDateIfAbsent() {
@@ -79,6 +88,14 @@ public class Invest {
         this.navPercentage = navPercentage;
     }
 
+    public double getNavRate() {
+        return navRate;
+    }
+
+    public void setNavRate(double navRate) {
+        this.navRate = navRate;
+    }
+
     public LocalDate getDate() {
         return date;
     }
@@ -101,5 +118,21 @@ public class Invest {
 
     public void setReturnsIn(String returnsIn) {
         this.returnsIn = returnsIn;
+    }
+
+    public String getRiskType() {
+        return riskType;
+    }
+
+    public void setRiskType(String riskType) {
+        this.riskType = riskType;
+    }
+
+    public String getRecommendationType() {
+        return recommendationType;
+    }
+
+    public void setRecommendationType(String recommendationType) {
+        this.recommendationType = recommendationType;
     }
 }

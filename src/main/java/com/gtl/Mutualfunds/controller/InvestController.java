@@ -24,11 +24,9 @@ public class InvestController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getInvestmentById(@PathVariable Long id) {
-        try {
-            return ResponseEntity.ok(investService.getInvestmentById(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
+        return investService.getInvestmentById(id) != null
+                ? ResponseEntity.ok(investService.getInvestmentById(id))
+                : ResponseEntity.notFound().build();
     }
 
     @PostMapping
@@ -36,7 +34,7 @@ public class InvestController {
         try {
             return ResponseEntity.ok(investService.saveInvestment(invest));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to create investment: " + e.getMessage()));
         }
     }
 
@@ -45,7 +43,7 @@ public class InvestController {
         try {
             return ResponseEntity.ok(investService.updateInvestment(id, invest));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -55,7 +53,12 @@ public class InvestController {
             String message = investService.deleteInvestment(id);
             return ResponseEntity.ok(Map.of("message", message));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ResponseEntity.notFound().build();
         }
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
+        return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
     }
 }
