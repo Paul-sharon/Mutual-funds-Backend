@@ -38,6 +38,7 @@ public class InvestService {
             invest.setInvestType(newInvest.getInvestType());
             invest.setRiskType(newInvest.getRiskType()); // Updated field
             invest.setRecommendationType(newInvest.getRecommendationType()); // Updated field
+            invest.setAmount(newInvest.getAmount()); // Added amount field
             return investRepository.save(invest);
         }).orElseThrow(() -> new RuntimeException("Investment with ID " + id + " not found"));
     }

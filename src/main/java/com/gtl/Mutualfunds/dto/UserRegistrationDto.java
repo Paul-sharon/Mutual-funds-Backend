@@ -1,12 +1,21 @@
 package com.gtl.Mutualfunds.dto;
 
 public class UserRegistrationDto {
+    private Long id;  // Add this
     private String name;
     private String email;
     private String password;
-    private String phoneNumber; // Add phone number
+    private String phoneNumber;
 
-    // Getters and setters
+    // Getters and Setters
+    public Long getId() { // Add this
+        return id;
+    }
+
+    public void setId(Long id) { // Add this
+        this.id = id;
+    }
+
     public String getName() {
         return name;
     }
@@ -32,10 +41,10 @@ public class UserRegistrationDto {
     }
 
     public String getPhoneNumber() {
-        return phoneNumber; // Getter for phone number
+        return phoneNumber;
     }
 
     public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber; // Setter for phone number
+        this.phoneNumber = phoneNumber;
     }
 }

@@ -1,7 +1,7 @@
 package com.gtl.Mutualfunds.model;
-
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "transactions")
@@ -34,7 +34,7 @@ public class Transactions {
     private Long orderNo; // Order Number
 
     @Column(nullable = false)
-    private Long units; // Number of units
+    private BigDecimal  units; // Number of units
 
     @Column(nullable = false)
     private Long folioNo; // Folio Number
@@ -116,11 +116,11 @@ public class Transactions {
         this.orderNo = orderNo;
     }
 
-    public Long getUnits() {
+    public BigDecimal  getUnits() {
         return units;
     }
 
-    public void setUnits(Long units) {
+    public void setUnits(BigDecimal  units) {
         this.units = units;
     }
 

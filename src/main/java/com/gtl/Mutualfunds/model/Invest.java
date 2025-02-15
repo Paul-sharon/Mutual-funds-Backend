@@ -22,7 +22,7 @@ public class Invest {
     private double navPercentage;
 
     @Column(nullable = false)
-    private double navRate; // New field for NAV rate
+    private double navRate; // NAV rate
 
     @Column(nullable = false)
     private LocalDate date;
@@ -36,10 +36,14 @@ public class Invest {
     private String investType;
 
     @Column(nullable = false)
-    private String riskType; // New field for risk level (e.g., Low, Medium, High)
+    private String riskType; // Risk level (Low, Medium, High)
 
     @Column(nullable = false)
-    private String recommendationType; // New field for recommendation (e.g., Buy, Hold, Sell)
+    private String recommendationType; // Recommendation (Buy, Hold, Sell)
+
+    @Column(nullable = false, columnDefinition = "FLOAT DEFAULT 0.0") // Set default value
+    private double amount;
+
 
     @PrePersist
     public void setDateIfAbsent() {
@@ -134,5 +138,13 @@ public class Invest {
 
     public void setRecommendationType(String recommendationType) {
         this.recommendationType = recommendationType;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
     }
 }

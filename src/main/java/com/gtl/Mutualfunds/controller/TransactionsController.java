@@ -57,7 +57,6 @@ public class TransactionsController {
             return ResponseEntity.notFound().build();
         }
     }
-
     // Delete a transaction
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTransaction(@PathVariable Long id) {
@@ -68,7 +67,6 @@ public class TransactionsController {
             return ResponseEntity.notFound().build();
         }
     }
-
     // Global exception handler
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<?> handleRuntimeException(RuntimeException e) {
