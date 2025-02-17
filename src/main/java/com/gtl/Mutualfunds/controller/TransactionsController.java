@@ -20,9 +20,11 @@ public class TransactionsController {
     @PostMapping
     public ResponseEntity<?> createTransaction(@RequestBody Transactions transaction) {
         try {
+            System.out.println("Received Transaction: " + transaction); // Debugging
             Transactions savedTransaction = transactionsService.saveTransaction(transaction);
             return ResponseEntity.ok(savedTransaction);
         } catch (Exception e) {
+            e.printStackTrace();  // Print full stack trace
             return ResponseEntity.status(500).body(Map.of("error", "Failed to create transaction: " + e.getMessage()));
         }
     }
